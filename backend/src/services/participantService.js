@@ -72,4 +72,39 @@ async function upsertRegistration({ srn, name, email, branch, source, registered
   return { participant: doc.value, created: !doc.lastErrorObject.updatedExisting };
 }
 
-module.exports = { findBySrn, snapshot, upsertRegistration, toPublic };
+async function listParticipants({ page = 1, limit = 50, search = '' }) {
+  const filter = { 'registration.registered': true };
+  if (search && search.trim()) {
+    const s = search.trim();
+    filter.$or = [
+      { srn: { $regex: s, $options: 'i' } },
+      { name: { $regex: s, $options: 'i' } },
+      { branch: { $regex: s, $options: 'i' } },
+    ];
+  }
+  const skip = (page - 1) * limit;
+  const [total, rows] = await Promise.all([
+    Participant.countDocuments(filter),
+    Participant.find(filter)
+      .sort({ 'registration.registeredAt': -1, srn: 1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+  ]);
+  return {
+    total,
+    page,
+    limit,
+    hasMore: skip + rows.length < total,
+    items: rows.map((p) => ({
+      srn: p.srn,
+      name: p.name,
+      email: p.email,
+      branch: p.branch,
+      registrationSource: p.registration.source,
+      registeredAt: p.registration.registeredAt,
+    })),
+  };
+}
+
+module.exports = { findBySrn, snapshot, listParticipants, upsertRegistration, toPublic };

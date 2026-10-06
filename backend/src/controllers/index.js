@@ -64,9 +64,20 @@ const getParticipant = wrap(async (req, res) => {
   return res.json({ success: true, status: 'registered', participant: participantService.toPublic(participant) });
 });
 
+const listParticipants = wrap(async (req, res) => {
+  const { page, limit, search } = req.query;
+  res.json({ success: true, ...(await participantService.listParticipants({ page: Number(page) || 1, limit: Number(limit) || 50, search })) });
+});
+
 const getSnapshot = wrap(async (req, res) => {
   const { updatedSince, afterId, limit } = req.query;
   res.json({ success: true, ...(await participantService.snapshot({ updatedSince, afterId, limit })) });
+});
+
+const resetAttendance = wrap(async (req, res) => {
+  const Attendance = require('../models/Attendance');
+  const result = await Attendance.deleteMany({ eventId: req.params.eventId.toUpperCase() });
+  res.json({ success: true, message: `Cleared ${result.deletedCount} attendance record(s).` });
 });
 
 const markAttendance = wrap(async (req, res) => {
@@ -123,9 +134,11 @@ module.exports = {
   login,
   getEvent,
   getParticipant,
+  listParticipants,
   getSnapshot,
   markAttendance,
   listAttendance,
   attendanceStats,
+  resetAttendance,
   syncRegistration,
 };

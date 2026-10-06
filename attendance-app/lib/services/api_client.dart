@@ -161,6 +161,23 @@ class ApiClient {
     );
   }
 
+  Future<ParticipantPage> listParticipants({
+    required int page,
+    String search = '',
+  }) async {
+    final res = await _request('GET', '/api/participants', query: {
+      'page': page,
+      'limit': AppConfig.recordsPageSize,
+      if (search.trim().isNotEmpty) 'search': search.trim(),
+    });
+    if (res.statusCode != 200) throw ApiException(res.message.isEmpty ? 'Could not load registered list.' : res.message, code: res.status);
+    return ParticipantPage(
+      items: ((res.json['items'] as List?) ?? []).map((e) => RegisteredParticipant.fromJson(e as Map<String, dynamic>)).toList(),
+      hasMore: res.json['hasMore'] as bool? ?? false,
+      total: (res.json['total'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   Future<Map<String, dynamic>> fetchSnapshotPage({String? updatedSince, String? afterId}) async {
     final res = await _request('GET', '/api/participants/snapshot', query: {
       'limit': 1000,

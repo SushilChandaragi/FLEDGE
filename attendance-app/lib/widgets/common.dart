@@ -76,9 +76,13 @@ class StatFigure extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: AppText.figure),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(value, style: AppText.figure),
+        ),
         const SizedBox(height: 4),
-        Text(label, style: AppText.meta),
+        Text(label, style: AppText.meta, maxLines: 1, overflow: TextOverflow.ellipsis),
       ],
     );
   }

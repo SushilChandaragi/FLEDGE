@@ -83,6 +83,40 @@ class AttendancePage {
   final int total;
 }
 
+class RegisteredParticipant {
+  RegisteredParticipant({
+    required this.srn,
+    required this.name,
+    required this.email,
+    required this.branch,
+    required this.registrationSource,
+    this.registeredAt,
+  });
+
+  final String srn;
+  final String name;
+  final String email;
+  final String branch;
+  final String registrationSource;
+  final DateTime? registeredAt;
+
+  factory RegisteredParticipant.fromJson(Map<String, dynamic> j) => RegisteredParticipant(
+        srn: j['srn'] as String? ?? '',
+        name: j['name'] as String? ?? '',
+        email: j['email'] as String? ?? '',
+        branch: j['branch'] as String? ?? '',
+        registrationSource: j['registrationSource'] as String? ?? 'google_form',
+        registeredAt: j['registeredAt'] != null ? DateTime.tryParse(j['registeredAt'] as String) : null,
+      );
+}
+
+class ParticipantPage {
+  ParticipantPage({required this.items, required this.hasMore, required this.total});
+  final List<RegisteredParticipant> items;
+  final bool hasMore;
+  final int total;
+}
+
 enum ScanKind {
   /// Server confirmed the attendance.
   marked,

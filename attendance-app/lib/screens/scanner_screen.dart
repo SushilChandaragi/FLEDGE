@@ -344,12 +344,15 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
                               color: _recentSuccess ? AppColors.success : AppColors.warning,
                             ),
                             const SizedBox(width: 8),
-                            Text('Recent scan: ', style: AppText.meta.copyWith(fontSize: 12)),
-                            Text(_recentSrn!, style: AppText.srn.copyWith(fontSize: 12, fontWeight: FontWeight.w600)),
-                            if (_recentName != null) ...[
-                              Text(' (${_recentName!})', style: AppText.meta.copyWith(fontSize: 12), overflow: TextOverflow.ellipsis),
-                            ],
-                            const Spacer(),
+                            Expanded(
+                              child: Text(
+                                'Recent scan: $_recentSrn${_recentName != null ? ' ($_recentName)' : ''}',
+                                style: AppText.meta.copyWith(fontSize: 12),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(formatTime(_recentTime), style: AppText.meta.copyWith(fontSize: 11)),
                           ],
                         ),

@@ -66,27 +66,29 @@ class ApiClient {
     bool auth = true,
   }) async {
     try {
+      if (kDebugMode) debugPrint('[API] $method ${_dio.options.baseUrl}$path');
       final res = await _dio.request<dynamic>(
         path,
         data: data,
         queryParameters: query,
         options: Options(method: method, extra: {'auth': auth}),
       );
+      if (kDebugMode) debugPrint('[API Response] ${res.statusCode} from $path');
       offline.value = false;
       final body = res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : <String, dynamic>{};
       final code = res.statusCode ?? 0;
       if (code == 401 && auth) throw AuthExpiredException();
       return ApiResponse(code, body);
     } on DioException catch (e) {
+      if (kDebugMode) debugPrint('[API Error] ${e.type} -> ${e.message} (cause: ${e.error})');
       switch (e.type) {
         case DioExceptionType.connectionError:
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.receiveTimeout:
           offline.value = true;
-          throw ApiException('Cannot reach the server.', code: 'network', network: true);
+          throw ApiException('Cannot reach the server. Check your internet connection.', code: 'network', network: true);
         default:
-          // 5xx or an unexpected payload: the server is reachable but unhealthy.
           offline.value = false;
           throw ApiException('The server had a problem. Please try again.', code: 'server_error');
       }

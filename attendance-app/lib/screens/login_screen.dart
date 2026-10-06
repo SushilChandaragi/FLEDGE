@@ -18,7 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   late final TextEditingController _operator;
   late final TextEditingController _password;
   late final TextEditingController _device;
-  late final TextEditingController _server;
   bool _busy = false;
   bool _showPassword = false;
   String? _error;
@@ -30,7 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _operator = TextEditingController(text: app.store.lastOperatorId);
     _password = TextEditingController();
     _device = TextEditingController(text: app.deviceId);
-    _server = TextEditingController(text: app.serverUrl);
     _error = app.loginNotice;
   }
 
@@ -39,7 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
     _operator.dispose();
     _password.dispose();
     _device.dispose();
-    _server.dispose();
     super.dispose();
   }
 
@@ -55,7 +52,6 @@ class _LoginScreenState extends State<LoginScreen> {
             operatorId: _operator.text,
             password: _password.text,
             deviceId: _device.text,
-            serverUrl: _server.text,
           );
     } on ApiException catch (e) {
       setState(() {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/app_config.dart';
 import '../models/models.dart';
 import '../services/api_client.dart';
 import '../services/attendance_service.dart';
@@ -47,11 +48,9 @@ class AppState extends ChangeNotifier {
     required String operatorId,
     required String password,
     required String deviceId,
-    required String serverUrl,
   }) async {
     await store.setDeviceId(deviceId.trim().toUpperCase());
-    await store.setServerUrl(serverUrl.trim());
-    api.setBaseUrl(serverUrl);
+    api.setBaseUrl(AppConfig.defaultApiBaseUrl);
     final result = await api.login(operatorId, password);
     await store.saveSession(result.session);
     session = result.session;

@@ -66,21 +66,21 @@ class ApiClient {
     bool auth = true,
   }) async {
     try {
-      if (kDebugMode) debugPrint('[API] $method ${_dio.options.baseUrl}$path');
+      debugPrint('[API REQUEST] $method ${_dio.options.baseUrl}$path | Data: $data');
       final res = await _dio.request<dynamic>(
         path,
         data: data,
         queryParameters: query,
         options: Options(method: method, extra: {'auth': auth}),
       );
-      if (kDebugMode) debugPrint('[API Response] ${res.statusCode} from $path');
+      debugPrint('[API RESPONSE] ${res.statusCode} from $path | Body: ${res.data}');
       offline.value = false;
       final body = res.data is Map<String, dynamic> ? res.data as Map<String, dynamic> : <String, dynamic>{};
       final code = res.statusCode ?? 0;
       if (code == 401 && auth) throw AuthExpiredException();
       return ApiResponse(code, body);
     } on DioException catch (e) {
-      if (kDebugMode) debugPrint('[API Error] ${e.type} -> ${e.message} (cause: ${e.error})');
+      debugPrint('[API ERROR] ${e.type} -> ${e.message} (cause: ${e.error}) | Response: ${e.response?.data}');
       switch (e.type) {
         case DioExceptionType.connectionError:
         case DioExceptionType.connectionTimeout:
@@ -96,9 +96,11 @@ class ApiClient {
   }
 
   Future<({Session session, String role})> login(String operatorId, String password) async {
+    debugPrint('[LOGIN] Attempting login to: ${_dio.options.baseUrl}/api/auth/login with operatorId: "$operatorId" (pwd len: ${password.length})');
     final res = await _request('POST', '/api/auth/login',
         data: {'operatorId': operatorId, 'password': password}, auth: false);
     if (res.statusCode != 200) {
+      debugPrint('[LOGIN FAILED] Server returned: status=${res.statusCode}, message="${res.message}", code="${res.status}"');
       throw ApiException(
         res.statusCode == 401 || res.statusCode == 429 || res.statusCode == 400
             ? (res.message.isNotEmpty ? res.message : 'Could not sign in.')

@@ -18,6 +18,18 @@ const loginLimiter = rateLimit({
 
 router.get('/health', (_req, res) => res.json({ success: true, status: 'ok' }));
 
+router.get('/auth/debug', async (_req, res) => {
+  const Operator = require('../models/Operator');
+  const mongoose = require('mongoose');
+  const ops = await Operator.find({}, 'operatorId role active displayName');
+  res.json({
+    database: mongoose.connection.name,
+    host: mongoose.connection.host,
+    operatorCount: ops.length,
+    operators: ops.map(o => ({ id: o.operatorId, role: o.role, active: o.active })),
+  });
+});
+
 router.post('/auth/login', loginLimiter, validate(c.schemas.login), c.login);
 
 // Participants (read-only)

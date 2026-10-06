@@ -48,18 +48,26 @@ class _LoginScreenState extends State<LoginScreen> {
       _error = null;
     });
     try {
+      final op = _operator.text.trim().toLowerCase();
+      final pwd = _password.text.trim();
+      final dev = _device.text.trim().toUpperCase();
+      debugPrint('=== [LOGIN BUTTON CLICKED] ===');
+      debugPrint('Operator: "$op", Password: "$pwd", Device: "$dev"');
       await context.read<AppState>().login(
-            operatorId: _operator.text.trim().toLowerCase(),
-            password: _password.text.trim(),
-            deviceId: _device.text.trim().toUpperCase(),
+            operatorId: op,
+            password: pwd,
+            deviceId: dev,
           );
+      debugPrint('=== [LOGIN SUCCESSFUL] ===');
     } on ApiException catch (e) {
+      debugPrint('=== [LOGIN EXCEPTION] ===: ${e.message} (code: ${e.code})');
       setState(() {
         _error = e.network
             ? 'Cannot reach the server. Check your internet connection.'
             : e.message;
       });
     } on AuthExpiredException {
+      debugPrint('=== [LOGIN AUTH EXPIRED] ===');
       setState(() => _error = 'Could not sign in.');
     } finally {
       if (mounted) setState(() => _busy = false);

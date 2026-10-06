@@ -1,7 +1,10 @@
 class AppConfig {
   /// Backend base URL. Override at build time: --dart-define=API_BASE_URL=https://api.example.com
   /// The operator can also change it on the sign-in screen (stored on the device).
-  static const defaultApiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:4000');
+  static const defaultApiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://cnest-fledge-attendance.onrender.com',
+  );
 
   /// The event this build records attendance for. The server validates it.
   static const eventId = String.fromEnvironment('EVENT_ID', defaultValue: 'FLEDGE26');

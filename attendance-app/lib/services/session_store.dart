@@ -42,7 +42,13 @@ class SessionStore {
 
   String get lastOperatorId => _prefs.getString('operatorId') ?? '';
 
-  String get serverUrl => _prefs.getString('serverUrl') ?? AppConfig.defaultApiBaseUrl;
+  String get serverUrl {
+    final saved = _prefs.getString('serverUrl');
+    if (saved == null || saved.contains('10.0.2.2') || saved.contains('localhost')) {
+      return AppConfig.defaultApiBaseUrl;
+    }
+    return saved;
+  }
   Future<void> setServerUrl(String v) => _prefs.setString('serverUrl', v);
 
   EventInfo? get event {

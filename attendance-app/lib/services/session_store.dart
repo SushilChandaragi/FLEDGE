@@ -44,7 +44,7 @@ class SessionStore {
 
   String get serverUrl {
     final saved = _prefs.getString('serverUrl');
-    if (saved == null || saved.contains('10.0.2.2') || saved.contains('localhost')) {
+    if (saved == null || saved.contains('10.0.2.2') || saved.contains('localhost') || saved.contains('loca.lt')) {
       return AppConfig.defaultApiBaseUrl;
     }
     return saved;

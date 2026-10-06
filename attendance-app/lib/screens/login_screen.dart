@@ -49,9 +49,9 @@ class _LoginScreenState extends State<LoginScreen> {
     });
     try {
       await context.read<AppState>().login(
-            operatorId: _operator.text,
-            password: _password.text,
-            deviceId: _device.text,
+            operatorId: _operator.text.trim().toLowerCase(),
+            password: _password.text.trim(),
+            deviceId: _device.text.trim().toUpperCase(),
           );
     } on ApiException catch (e) {
       setState(() {

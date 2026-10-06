@@ -16,10 +16,10 @@
  */
 
 const CONFIG = {
-  // Replace with your deployed backend HTTPS URL (e.g., https://fledge-api.yourdomain.com)
-  BACKEND_URL: PropertiesService.getScriptProperties().getProperty('BACKEND_URL') || 'https://YOUR_BACKEND_URL_HERE',
-  // Must match the REGISTRATION_SYNC_SECRET in your backend .env file
-  SYNC_SECRET: PropertiesService.getScriptProperties().getProperty('SYNC_SECRET') || 'YOUR_SYNC_SECRET_HERE',
+  // Deployed live backend URL on Render:
+  BACKEND_URL: 'https://cnest-fledge-attendance.onrender.com',
+  // Secret from backend/.env:
+  SYNC_SECRET: 'b9d2f84d6e5c3098898305f33e3e7397af28c1583a739176',
 };
 
 /**

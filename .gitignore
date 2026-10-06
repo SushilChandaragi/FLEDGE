@@ -1,0 +1,33 @@
+# Environment files with private secrets
+.env
+*.env
+atlas-credentials*.env
+backend/.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Flutter / Dart
+attendance-app/.dart_tool/
+attendance-app/.flutter-plugins
+attendance-app/.flutter-plugins-dependencies
+attendance-app/.packages
+attendance-app/build/
+attendance-app/.pub-cache/
+attendance-app/.pub/
+
+# Android
+attendance-app/android/.gradle
+attendance-app/android/local.properties
+attendance-app/android/app/debug
+attendance-app/android/app/profile
+attendance-app/android/app/release
+
+# Logs & temp
+*.log
+.DS_Store
+Thumbs.db

@@ -65,11 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    if (event != null) ...[
-                      const SizedBox(height: 8),
-                      Text('${event.date} · ${event.time} · ${event.venue}', style: AppText.meta),
-                    ],
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
                     Row(
                       children: [
                         Expanded(child: StatFigure(label: 'Registered', value: '${stats.registered}')),

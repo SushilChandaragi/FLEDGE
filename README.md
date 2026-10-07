@@ -1,192 +1,159 @@
-# CNEST FLEDGE '26 — Attendance System (Phase 1)
+# FLEDGE26 — Event Attendance Management System
 
-Production attendance management system for **CNEST TBI 2.0 FLEDGE '26 Orientation Programme** (KLE Technological University, Belagavi).
+A production-grade, multi-device attendance management system designed for **CNEST TBI 2.0 FLEDGE '26** and multi-event university programmes (KLE Technological University, Belagavi).
 
-Built with **Flutter (Mobile Client)**, **Node.js + Express (Backend REST API)**, **MongoDB Atlas (Database)**, and **Google Forms / Sheets (Registration Sync)**.
+Built with **Flutter (Android Mobile App)**, **Node.js + Express (Backend REST API on Render)**, **MongoDB Atlas (Cloud Database)**, and **Google Forms / Sheets (Live Registration Webhook)**.
 
 ---
 
-## Quick Start Guide
+## 📱 User & Volunteer Guide (Event Day Workflow)
 
-### 1. Backend Setup
+### 1. Signing In to the App
+1. Install and open the **FLEDGE26** app on your Android phone.
+2. Enter your credentials:
+   - **Operator ID:** `gate1` *(or your assigned operator ID)*
+   - **Password:** `fledge26`
+   - **Device ID:** `GATE-01` *(or any identifier, e.g. `PHONE-A`, `COUNTER-2`)*
+3. Tap **Sign in**.
 
-1. Open a terminal in the `backend` folder:
-   ```bash
-   cd backend
-   npm install
+---
+
+### 2. Scanning Student ID Barcodes
+1. On the Home screen, tap **Start scanning**.
+2. Aim the camera at the 1D barcode on the student's KLE Tech ID card.
+3. The app scans the barcode as the full student SRN (e.g. `02FE23BCS136`):
+   - 🟢 **Success (Green Banner):** Displays Student Name, SRN, and "Pre-registered" or "Walk-in". The scanner automatically resets after 1.5 seconds for the next student.
+   - 🟡 **Already Marked (Amber Banner):** Indicates this student has **already entered** (prevents duplicate entry across multiple gates).
+   - 🔴 **Not Registered (Red Banner):** Indicates the student is not in the system. Tap **Show QR** so the student can scan your screen to fill the Google Form, then tap **Check Again** once submitted.
+
+---
+
+### 3. Manual SRN Entry (Damaged / Unreadable Barcode)
+1. If an ID card barcode is scratched or camera cannot read it, tap **Enter SRN** (or **Manual SRN Entry**).
+2. Type the student's SRN (e.g. `02fe23bcs136`).
+3. The app automatically capitalizes and trims whitespace, checks the server, and marks attendance.
+
+---
+
+### 4. Viewing Live Records & Form Responses
+Tap **View attendance** on the Home screen to view two live tabs:
+- **Tab 1: Total Scanned (Present):** Real-time count of total students present at the venue, search bar by SRN or Name, and filters for Pre-registered vs Walk-in attendees.
+- **Tab 2: Registered List (Form):** Complete directory of students synced from the Google Form with their Branch, Email, and registration timestamp.
+
+---
+
+### 5. Offline Operation
+- If Wi-Fi or mobile data drops, the app switches to **Offline Mode**.
+- Scans are validated against a local SQLite snapshot downloaded to the phone, stored in a local pending queue, and automatically synchronized to MongoDB Atlas as soon as internet connectivity resumes.
+
+---
+
+## 🛠️ Coordinator & Admin Management Guide
+
+### A. Resetting Attendance on Event Day Morning
+To clear test scans before attendees arrive:
+```bash
+cd backend
+npm run reset:attendance
+```
+Type `YES` when prompted. This clears only the check-in timestamps in MongoDB; **it will NEVER delete or modify your Google Sheet responses**.
+
+---
+
+### B. Exporting the Final Present Attendee List to CSV
+At the end of the event, export the verified list of all attendees present:
+```bash
+cd backend
+npm run export:present
+```
+*(Or specify a custom filename: `npm run export:present fledge26_final_present.csv`)*
+
+**Exported CSV Columns:**
+`Sl No`, `SRN`, `Student Name`, `Branch`, `Email`, `Attendance Time (IST)`, `Registration Status`, `Operator ID`, `Device ID`.
+
+You can also download this directly via browser / API:
+`GET https://YOUR_BACKEND_URL/api/events/FLEDGE26/attendance/export` (with Operator Bearer token).
+
+---
+
+### C. Re-importing Pre-Registered Students via CSV
+To bulk load participants from an Excel / CSV export of your Google Sheet:
+```bash
+cd backend
+node scripts/import-participants.js path/to/participants.csv
+```
+
+---
+
+## 🔁 Using This App for Other Events
+
+This architecture is multi-event ready. To run this app for another event (e.g., `HACKATHON26`, `INDUCTION27`):
+
+1. **Bootstrap the New Event in MongoDB:**
+   In `backend/.env` (or Render Environment Variables), set:
+   ```env
+   EVENT_ID=HACKATHON26
+   REGISTRATION_FORM_URL=https://forms.gle/YOUR_NEW_FORM_URL
    ```
-
-2. Generate or verify `.env`:
+   Run:
    ```bash
-   node scripts/make-env.js
-   ```
-   *Your `.env` is configured with your MongoDB Atlas cluster URI, a secure random JWT secret, and a sync secret.*
-
-3. Seed the Event & Create Operators:
-   ```bash
-   # Initialize the FLEDGE '26 Event
    npm run seed:event
-
-   # Create an Attendance Operator for Gate 1
-   npm run operator:create -- gate1 fledge2026 "Gate 1 Operator" attendance_operator
-
-   # Create an Admin Operator
-   npm run operator:create -- admin admin2026 "Lead Coordinator" admin
    ```
 
-4. Import Pre-registered Students (Optional / Initial Load):
+2. **Configure the Google Sheet Webhook:**
+   Link your new event's Google Form to a new Google Sheet, paste `google-apps-script/sync-google-form.js`, update `BACKEND_URL` and `SYNC_SECRET`, and add the `onFormSubmit` trigger.
+
+3. **Build APK for the New Event:**
    ```bash
-   node scripts/import-participants.js scripts/sample-participants.csv
+   flutter build apk --release --dart-define=EVENT_ID=HACKATHON26 --dart-define=API_BASE_URL=https://your-backend.onrender.com
    ```
-
-5. Run Automated Tests:
-   ```bash
-   npm test
-   ```
-
-6. Start the Backend Server:
-   ```bash
-   npm start
-   # Or for development with auto-reload:
-   npm run dev
-   ```
-   *Server listens on `http://localhost:4000` (or configured PORT).*
 
 ---
 
-### 2. Flutter Mobile App Setup & Run
+## 🏗️ Technical Architecture & Security
 
-1. Open a terminal in the `attendance-app` folder:
-   ```bash
-   cd attendance-app
-   flutter pub get
-   ```
-
-2. Run Tests & Lint:
-   ```bash
-   flutter test
-   flutter analyze
-   ```
-
-3. Run on Connected Android Device or Emulator:
-   ```bash
-   # When testing against local backend on Android Emulator:
-   flutter run
-
-   # When testing on physical Android phone connected via USB / Wi-Fi:
-   # (Replace 192.168.1.50 with your computer's local Wi-Fi IP address)
-   flutter run --dart-define=API_BASE_URL=http://192.168.1.50:4000
-   ```
-
-4. Build Release Android APK:
-   ```bash
-   # Debug APK (for instant sideloading and testing on volunteer phones):
-   flutter build apk --debug --dart-define=API_BASE_URL=https://YOUR_BACKEND_DOMAIN.com
-
-   # Production Release APK:
-   flutter build apk --release --dart-define=API_BASE_URL=https://YOUR_BACKEND_DOMAIN.com
-   ```
-   *Output APK will be generated at:* `attendance-app/build/app/outputs/flutter-apk/app-release.apk`
-
----
-
-## 3. Google Form & Google Apps Script Setup (Real-Time Walk-ins)
-
-1. Create a Google Form with fields:
-   - **SRN** (Required)
-   - **Full Name** (Required)
-   - **Email** (Optional)
-   - **Branch** (Optional)
-2. Link the Form to a Google Sheet (**Responses** -> **Link to Sheets**).
-3. In the Google Sheet, navigate to **Extensions** -> **Apps Script**.
-4. Paste the content of [`google-apps-script/sync-google-form.js`](./google-apps-script/sync-google-form.js).
-5. Update `BACKEND_URL` and `SYNC_SECRET` (matching `REGISTRATION_SYNC_SECRET` in backend `.env`).
-6. Set up the trigger in Apps Script:
-   - Click **Triggers** (Alarm Clock icon on the left).
-   - Click **+ Add Trigger**.
-   - Choose `onFormSubmit`, Event Source: `From spreadsheet`, Event Type: `On form submit`.
-   - Click Save.
-7. *Backfill:* You can run the `syncAllExistingRows()` function inside Apps Script at any time to sync all historical responses to MongoDB.
-
----
-
-## 4. Operator Workflow on Event Day
-
-1. **Sign In:**
-   - **Operator ID:** `gate1`
-   - **Password:** `fledge2026`
-   - **Device ID:** `GATE-A-01` (unique for each phone)
-2. **Scan College ID Barcode:**
-   - Point the camera at the 1D barcode on the student ID card.
-   - The barcode value is treated directly as the student's full SRN (e.g. `02FE23BCS136`).
-   - **Success:** Shows green confirmation banner with Name, SRN, and Registration Type, then automatically resumes scanning.
-   - **Duplicate Scan:** Shows warning that attendee was already marked present (with original scan time & device ID).
-   - **Not Registered:** Shows red notice with **[Show QR]** (displays Google Form QR) and **[Check Again]**.
-3. **Manual SRN Fallback:**
-   - If ID card is scratched/unreadable, tap **"Enter SRN Manually"**, type SRN, and tap **"Check"**. Automatically converts to uppercase and normalizes spaces.
-4. **Offline Resilience:**
-   - If Wi-Fi drops, scans for cached participants are saved locally to SQLite with `PENDING SYNC` status and automatically synced with the server once connectivity resumes.
-5. **View-Only Records:**
-   - Tap **"View Attendance"** to see live counts, search by name or SRN, and filter by pre-registered / walk-in. **No edit or delete buttons exist**, ensuring data integrity.
-
----
-
-## 5. Testing Checklist
-
-- [x] **Registered CSE Student:** Barcode / SRN lookup succeeds, marks attendance with status `pre_registered`.
-- [x] **Other Branches (ECE, EEE, ME, Civil, AI):** Barcodes from various branches parse as opaque SRN strings without branch hardcoding.
-- [x] **Duplicate Prevention:** Scanning same student on Phone A and Phone B produces `already_attended` (tested with 12 concurrent requests).
-- [x] **Manual SRN Entry:** Handles lowercase (`02fe23bcs136`) and whitespace (` 02FE23BCS136 `).
-- [x] **Walk-in Flow:** Unregistered student scans QR -> submits Google Form -> volunteer clicks "Check Again" -> marked as `walk_in`.
-- [x] **Offline Cache & Sync:** Scans queued in local SQLite when offline and flushed to MongoDB with original timestamp.
-- [x] **Security:** JWT authentication enforced; sensitive routes reject unauthorized clients; zero client exposure to raw MongoDB credentials.
-- [x] **Immutability:** Attendance records are strictly append-only (no PUT/PATCH/DELETE endpoints).
-
----
-
-## 6. Project Structure
-
+### System Overview
 ```
-FLEDGE/
-├── backend/                         # Node.js + Express Backend
-│   ├── src/
-│   │   ├── config/                  # DB connection and env loader
-│   │   ├── controllers/             # Request handlers
-│   │   ├── middleware/              # JWT auth, Sync auth, Zod validation
-│   │   ├── models/                  # Mongoose models (Event, Participant, Attendance, Operator)
-│   │   ├── routes/                  # REST API routes
-│   │   ├── services/                # Business logic
-│   │   ├── utils/                   # SRN normalization and error classes
-│   │   ├── app.js
-│   │   └── server.js
-│   ├── scripts/                     # Seed event, create operator, import CSV
-│   ├── test/                        # Node.js integration tests (npm test)
-│   ├── .env.example
-│   └── package.json
-│
-├── attendance-app/                  # Flutter Mobile Client
-│   ├── lib/
-│   │   ├── config/                  # App constants & timeouts
-│   │   ├── models/                  # Data classes (Event, Stats, Record, Outcome)
-│   │   ├── screens/
-│   │   │   ├── login_screen.dart
-│   │   │   ├── home_screen.dart
-│   │   │   ├── scanner_screen.dart
-│   │   │   ├── manual_srn_screen.dart
-│   │   │   ├── registration_qr_screen.dart
-│   │   │   └── attendance_records_screen.dart
-│   │   ├── services/                # ApiClient, LocalDb (SQLite), AttendanceService, SyncService
-│   │   ├── state/                   # AppState ChangeNotifier
-│   │   ├── theme/                   # Calm, cool-blue CNEST typography and tokens
-│   │   ├── utils/                   # SRN regex and formatting
-│   │   ├── widgets/                 # StatusBanner, BrandHeader, StatFigure
-│   │   └── main.dart
-│   ├── assets/fonts/                # Inter font family
-│   ├── test/                        # Flutter unit tests
-│   └── pubspec.yaml
-│
-├── google-apps-script/
-│   └── sync-google-form.js          # Google Form -> Backend webhook sync
-└── docs/
-    └── ARCHITECTURE_AND_API.md      # API specifications and database schemas
+┌─────────────────────────┐         ┌─────────────────────────┐
+│ Google Form / Sheet     │         │ Flutter Android Client  │
+│ (Attendee Registration) │         │ (Camera Barcode + UI)   │
+└────────────┬────────────┘         └────────────┬────────────┘
+             │ Webhook POST                      │ HTTPS + JWT
+             ▼                                   ▼
+┌─────────────────────────────────────────────────────────────┐
+│               Node.js + Express Backend REST API             │
+│   - Rate Limiter, Helmet Security, Zod Input Validation     │
+│   - Atomic Upsert & Compound Unique Indexes                 │
+└────────────────────────────┬────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 MongoDB Atlas Cloud Database                 │
+│   - `operators`    : Bcrypt hashed credentials & roles       │
+│   - `events`       : Event bootstrap & Google Form QR config │
+│   - `participants` : Pre-registered & walk-in students       │
+│   - `attendance`   : Append-only event check-ins             │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+### Security & Data Integrity
+1. **Zero Client DB Access:** Mobile devices never communicate with MongoDB directly; all requests pass through authenticated Node.js REST endpoints with JWT validation.
+2. **Duplicate Attack Protection:** MongoDB enforces a compound unique index `{ eventId: 1, srn: 1 }` on the `attendance` collection, making duplicate check-ins mathematically impossible even with 20+ operators scanning simultaneously.
+3. **Append-Only Immutability:** No `PUT`, `PATCH`, or `DELETE` endpoints exist for attendance records over public HTTP.
+4. **Offline Delta Sync:** Mobile clients track snapshot timestamps (`updatedSince`) and UUID cursors to sync delta changes without downloading the full dataset repeatedly.
+
+---
+
+## 🚀 Deployment & Installation
+
+### Live Backend URL
+`https://cnest-fledge-attendance.onrender.com`
+
+### Building the Mobile APK
+```bash
+cd attendance-app
+flutter pub get
+dart run flutter_launcher_icons
+flutter build apk --release
+```
+Output APK: `attendance-app/build/app/outputs/flutter-apk/app-release.apk`

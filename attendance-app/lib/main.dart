@@ -35,7 +35,7 @@ class FledgeAttendanceApp extends StatelessWidget {
     final app = context.watch<AppState>();
 
     return MaterialApp(
-      title: "CNEST FLEDGE '26 Attendance",
+      title: "FLEDGE26",
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       navigatorKey: app.navigatorKey,

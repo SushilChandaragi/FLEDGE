@@ -10,6 +10,8 @@
     "seed:event": "node scripts/seed-event.js",
     "operator:create": "node scripts/create-operator.js",
     "import:csv": "node scripts/import-participants.js",
+    "export:present": "node scripts/export-present.js",
+    "export:csv": "node scripts/export-present.js",
     "reset:attendance": "node scripts/reset-attendance.js",
     "test": "node --test --test-concurrency=1 test/api.test.js"
   },

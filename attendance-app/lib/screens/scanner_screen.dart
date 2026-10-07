@@ -163,7 +163,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
 
     return Scaffold(
       appBar: AppBar(
-        title: const BrandHeader(compact: true),
+        title: const Text('Scan Student Barcode'),
         actions: [
           IconButton(
             icon: ValueListenableBuilder<MobileScannerState>(

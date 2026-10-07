@@ -80,6 +80,42 @@ const resetAttendance = wrap(async (req, res) => {
   res.json({ success: true, message: `Cleared ${result.deletedCount} attendance record(s).` });
 });
 
+const exportAttendanceCsv = wrap(async (req, res) => {
+  const Attendance = require('../models/Attendance');
+  const Participant = require('../models/Participant');
+  const records = await Attendance.find({ eventId: req.params.eventId.toUpperCase() }).sort({ scannedAt: 1 }).lean();
+  const srns = records.map((r) => r.srn);
+  const participants = await Participant.find({ srn: { $in: srns } }).lean();
+  const partMap = new Map(participants.map((p) => [p.srn, p]));
+
+  const escapeCsv = (str) => {
+    if (str == null) return '""';
+    const s = String(str);
+    return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : `"${s}"`;
+  };
+
+  const lines = ['Sl No,SRN,Name,Branch,Email,Attendance Time,Registration Status,Operator ID,Device ID'];
+  records.forEach((r, i) => {
+    const p = partMap.get(r.srn);
+    const ts = r.scannedAt || r.receivedAt;
+    lines.push([
+      i + 1,
+      escapeCsv(r.srn),
+      escapeCsv(r.name || (p ? p.name : '')),
+      escapeCsv(r.branch || (p ? p.branch : '')),
+      escapeCsv(p ? p.email : ''),
+      escapeCsv(ts ? new Date(ts).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: true }) : ''),
+      escapeCsv(r.registrationStatus === 'walk_in' ? 'Walk-in' : 'Pre-registered'),
+      escapeCsv(r.operatorId || ''),
+      escapeCsv(r.deviceId || ''),
+    ].join(','));
+  });
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${req.params.eventId}_attendance.csv"`);
+  res.send(lines.join('\n'));
+});
+
 const markAttendance = wrap(async (req, res) => {
   const event = await eventService.getActiveEvent(req.params.eventId);
   const { httpStatus, body } = await attendanceService.markAttendance({
@@ -140,5 +176,6 @@ module.exports = {
   listAttendance,
   attendanceStats,
   resetAttendance,
+  exportAttendanceCsv,
   syncRegistration,
 };

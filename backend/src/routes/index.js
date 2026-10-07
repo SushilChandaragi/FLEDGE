@@ -42,6 +42,7 @@ router.get('/events/:eventId', ...operatorAccess, c.getEvent);
 router.post('/events/:eventId/attendance', ...operatorAccess, validate(c.schemas.mark), c.markAttendance);
 router.get('/events/:eventId/attendance', ...operatorAccess, validate(c.schemas.list, 'query'), c.listAttendance);
 router.get('/events/:eventId/attendance/stats', ...operatorAccess, c.attendanceStats);
+router.get('/events/:eventId/attendance/export', ...operatorAccess, c.exportAttendanceCsv);
 router.post('/events/:eventId/attendance/reset', authenticate, requireRole('admin'), c.resetAttendance);
 
 // Google Apps Script -> MongoDB
